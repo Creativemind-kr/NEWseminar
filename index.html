@@ -420,6 +420,49 @@
       .stat-card { padding:16px 16px 14px; }
       .stat-card-num { font-size:1.9rem; }
     }
+
+    /* ═══════════════════════════════════════
+       CHOICE MODAL
+    ═══════════════════════════════════════ */
+    .choose-wrap { text-align:center;padding:4px 0 8px; }
+    .choose-emoji { font-size:2.8rem;margin-bottom:14px; }
+    .choose-title { font-size:1.25rem;font-weight:900;color:var(--t1);margin-bottom:6px; }
+    .choose-sub { font-size:.875rem;color:var(--t3);margin-bottom:28px;line-height:1.6; }
+    .choose-btns { display:flex;flex-direction:column;gap:11px; }
+    .choose-btn { display:flex;align-items:center;gap:12px;padding:15px 20px;border-radius:var(--r2);border:2px solid var(--b2);background:#fff;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s var(--ease);color:var(--t1);text-align:left; }
+    .choose-btn:hover { border-color:var(--p);background:var(--p-light);color:var(--p); }
+    .choose-btn-primary { background:var(--p);border-color:var(--p);color:#fff;box-shadow:0 4px 14px rgba(27,115,232,.35); }
+    .choose-btn-primary:hover { background:var(--p-dark);border-color:var(--p-dark);color:#fff; }
+    .choose-btn-icon { font-size:1.3rem;flex-shrink:0; }
+    .choose-btn-text { display:flex;flex-direction:column;gap:2px; }
+    .choose-btn-label { font-size:.92rem;font-weight:800; }
+    .choose-btn-desc { font-size:.75rem;opacity:.75;font-weight:500; }
+
+    /* ═══════════════════════════════════════
+       LOAD LIST MODAL
+    ═══════════════════════════════════════ */
+    .load-search-wrap { position:relative;margin-bottom:14px; }
+    .load-search-icon { position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;font-size:.9rem; }
+    .load-search-input { width:100%;padding:10px 12px 10px 38px;border:1.5px solid var(--b2);border-radius:var(--r1);font-size:.9rem;font-family:inherit;color:var(--t1);background:var(--bg);outline:none;transition:all .18s; }
+    .load-search-input:focus { border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(27,115,232,.1); }
+    .load-list-header { display:grid;grid-template-columns:130px 1fr 108px 100px;gap:6px;padding:7px 12px;background:var(--bg2);border-radius:var(--r1) var(--r1) 0 0;font-size:.7rem;font-weight:800;color:var(--t3);letter-spacing:.05em;text-transform:uppercase; }
+    .load-list-body { border:1px solid var(--b1);border-top:none;border-radius:0 0 var(--r1) var(--r1);max-height:310px;overflow-y:auto; }
+    .load-row { display:grid;grid-template-columns:130px 1fr 108px 100px;gap:6px;padding:11px 12px;cursor:pointer;transition:all .14s;border-bottom:1px solid var(--b1);border:2px solid transparent;border-bottom:1px solid var(--b1); }
+    .load-row:last-child { border-bottom:none; }
+    .load-row:hover { background:#F8F9FA; }
+    .load-row.selected { background:var(--p-light);border-left:3px solid var(--p); }
+    .load-row-cell { font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center; }
+    .lc-instructor { font-weight:700;color:var(--t1); }
+    .lc-title { color:var(--t2); }
+    .lc-date { color:var(--t3);font-size:.78rem; }
+    .lc-time { color:var(--t3);font-size:.78rem; }
+    .load-empty { text-align:center;padding:36px 16px;color:var(--t4);font-size:.875rem; }
+    .load-count-note { font-size:.75rem;color:var(--t4);margin-bottom:8px;text-align:right; }
+    @media (max-width:560px) {
+      .load-list-header { grid-template-columns:100px 1fr 90px; }
+      .load-row { grid-template-columns:100px 1fr 90px; }
+      .lc-time-col { display:none; }
+    }
   </style>
 </head>
 <body>
@@ -670,6 +713,65 @@
   </main>
 </div>
 
+<!-- CHOICE MODAL -->
+<div class="overlay" id="choose-overlay">
+  <div class="modal modal-sm">
+    <div class="choose-wrap">
+      <div class="choose-emoji">📋</div>
+      <div class="choose-title">특강 제안서 작성</div>
+      <div class="choose-sub">새로 작성하거나,<br>기존 특강 데이터를 불러와 수정할 수 있어요.</div>
+      <div class="choose-btns">
+        <button class="choose-btn choose-btn-primary" onclick="closeChoiceModal()">
+          <span class="choose-btn-icon">✏️</span>
+          <span class="choose-btn-text">
+            <span class="choose-btn-label">새로 만들기</span>
+            <span class="choose-btn-desc">빈 양식으로 처음부터 작성</span>
+          </span>
+        </button>
+        <button class="choose-btn" onclick="openLoadList()">
+          <span class="choose-btn-icon">📂</span>
+          <span class="choose-btn-text">
+            <span class="choose-btn-label">기존 데이터 불러오기</span>
+            <span class="choose-btn-desc">이전 특강 내용을 복사해서 재사용</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD LIST MODAL -->
+<div class="overlay" id="load-list-overlay" onclick="if(event.target===this)closeLoadList()">
+  <div class="modal" style="max-width:660px">
+    <div class="m-header">
+      <div class="m-icon m-icon-blue">📂</div>
+      <div>
+        <div class="m-title">기존 데이터 불러오기</div>
+        <div class="m-sub">불러올 특강을 선택하고 아래 버튼을 눌러주세요. (날짜는 비워집니다)</div>
+      </div>
+      <button class="m-close" onclick="closeLoadList()">✕</button>
+    </div>
+    <div class="load-search-wrap">
+      <span class="load-search-icon">🔍</span>
+      <input type="text" id="load-search" class="load-search-input"
+        placeholder="강사명 또는 강의 주제로 검색..."
+        oninput="renderLoadList()">
+    </div>
+    <div class="load-count-note" id="load-count-note"></div>
+    <div class="load-list-header">
+      <div>강사명</div>
+      <div>강의 주제</div>
+      <div>날짜</div>
+      <div class="lc-time-col">시간</div>
+    </div>
+    <div class="load-list-body" id="load-list-body"></div>
+    <div class="m-actions">
+      <button class="m-btn mb-close" onclick="backToChoiceModal()">← 돌아가기</button>
+      <button class="m-btn mb-save" onclick="confirmLoad()">📥 불러오기</button>
+    </div>
+  </div>
+</div>
+
 <!-- DETAIL MODAL -->
 <div class="overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
   <div class="modal">
@@ -768,6 +870,8 @@ let rejectId  = null;
 let activeTab = 'submit';
 let draftTimer = null;
 let currentDetailId = null;
+let skipChoiceModal = false;
+let loadSelectedId  = null;
 
 // ══════════════════════════════════════
 // AUTH
@@ -1120,6 +1224,7 @@ function openCopy(id) {
   document.getElementById('f-memo').value         = s.memo || '';
   document.getElementById('sc-title').textContent = '특강 제안서 제출 (복사됨)';
   document.getElementById('submit-btn').innerHTML = '<span>📤</span> 제출하기';
+  skipChoiceModal = true;
   switchTab('submit');
   showToast('내용을 불러왔습니다. 날짜를 확인해 주세요.', 'ok');
 }
@@ -1133,7 +1238,13 @@ function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.getElementById(`tab-${name}`).classList.add('active');
   if (name === 'calendar' && cal) setTimeout(() => cal.updateSize(), 60);
-  if (name === 'submit') checkDraft();
+  if (name === 'submit') {
+    checkDraft();
+    if (!skipChoiceModal && !document.getElementById('edit-id').value && isFormEmpty() && !hasValidDraft()) {
+      showChoiceModal();
+    }
+  }
+  skipChoiceModal = false;
   if (name === 'stats') renderStats();
 }
 
@@ -1153,6 +1264,7 @@ function openEdit(id) {
   document.getElementById('f-memo').value           = s.memo || '';
   document.getElementById('sc-title').textContent   = '특강 제안서 수정';
   document.getElementById('submit-btn').innerHTML   = '<span>💾</span> 저장하기';
+  skipChoiceModal = true;
   switchTab('submit');
 }
 
@@ -1225,6 +1337,105 @@ async function confirmDel() {
   await db.collection('seminars').doc(delId).delete();
   closeDel();
   showToast('삭제되었습니다.', 'err');
+}
+
+// ══════════════════════════════════════
+// CHOICE MODAL & LOAD LIST
+// ══════════════════════════════════════
+function isFormEmpty() {
+  return FORM_FIELDS.every(fid => !(document.getElementById(fid)?.value || '').trim());
+}
+
+function hasValidDraft() {
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if (!raw) return false;
+  try { const d = JSON.parse(raw); return (Date.now() - (d.savedAt || 0)) < DRAFT_TTL; }
+  catch { return false; }
+}
+
+function showChoiceModal() {
+  document.getElementById('choose-overlay').classList.add('show');
+}
+function closeChoiceModal() {
+  document.getElementById('choose-overlay').classList.remove('show');
+}
+
+function openLoadList() {
+  closeChoiceModal();
+  loadSelectedId = null;
+  document.getElementById('load-search').value = '';
+  renderLoadList();
+  document.getElementById('load-list-overlay').classList.add('show');
+}
+function closeLoadList() {
+  loadSelectedId = null;
+  document.getElementById('load-list-overlay').classList.remove('show');
+}
+function backToChoiceModal() {
+  closeLoadList();
+  showChoiceModal();
+}
+
+function selectLoadItem(id) {
+  loadSelectedId = id;
+  document.querySelectorAll('.load-row').forEach(r =>
+    r.classList.toggle('selected', r.dataset.id === id)
+  );
+}
+
+function renderLoadList() {
+  const q = (document.getElementById('load-search')?.value || '').trim().toLowerCase();
+  let list = [...seminars];
+  if (q) {
+    list = list.filter(s =>
+      (s.instructor || '').toLowerCase().includes(q) ||
+      (s.title || '').toLowerCase().includes(q)
+    );
+  }
+  const total = list.length;
+  list = list.slice(0, 20);
+
+  const noteEl = document.getElementById('load-count-note');
+  if (noteEl) noteEl.textContent = total ? `총 ${total}건 중 최대 20개 표시` : '';
+
+  const body = document.getElementById('load-list-body');
+  if (!body) return;
+  if (!list.length) {
+    body.innerHTML = `<div class="load-empty">검색 결과가 없습니다.</div>`;
+    return;
+  }
+  body.innerHTML = list.map(s => {
+    const dateStr = s.event_date ? s.event_date.slice(5).replace('-', '/') : '-';
+    const timeStr = (s.start_time && s.end_time) ? `${s.start_time}~${s.end_time}` : (s.start_time || '-');
+    const sel = loadSelectedId === s.id ? ' selected' : '';
+    return `<div class="load-row${sel}" data-id="${s.id}" onclick="selectLoadItem('${s.id}')">
+      <div class="load-row-cell lc-instructor">${esc(s.instructor || '-')}</div>
+      <div class="load-row-cell lc-title">${esc(s.title || '-')}</div>
+      <div class="load-row-cell lc-date">${dateStr}</div>
+      <div class="load-row-cell lc-time lc-time-col">${timeStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function confirmLoad() {
+  if (!loadSelectedId) { showToast('불러올 항목을 선택해 주세요.', 'err'); return; }
+  const s = seminars.find(x => x.id === loadSelectedId);
+  if (!s) return;
+  document.getElementById('edit-id').value        = '';
+  document.getElementById('f-title').value        = s.title || '';
+  document.getElementById('f-instructor').value   = s.instructor || '';
+  document.getElementById('f-location').value     = s.location || '';
+  document.getElementById('f-date').value         = '';
+  document.getElementById('f-start').value        = s.start_time || '';
+  document.getElementById('f-end').value          = s.end_time || '';
+  document.getElementById('f-capacity').value     = s.capacity || '';
+  document.getElementById('f-registration').value = s.registration || '';
+  document.getElementById('f-target').value       = s.target || '';
+  document.getElementById('f-memo').value         = s.memo || '';
+  document.getElementById('sc-title').textContent = '특강 제안서 제출';
+  document.getElementById('submit-btn').innerHTML = '<span>📤</span> 제출하기';
+  closeLoadList();
+  showToast('데이터를 불러왔습니다. 날짜를 입력해 주세요. 📅', 'ok');
 }
 
 // ══════════════════════════════════════
