@@ -9,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -381,6 +382,44 @@
       .search-input { font-size:16px; }
       .date-filter { font-size:16px; }
     }
+
+    /* ═══════════════════════════════════════
+       STATS TAB
+    ═══════════════════════════════════════ */
+    .stats-outer { flex:1;padding:28px 28px 48px;max-width:1200px;width:100%;margin:0 auto; }
+    .stats-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px; }
+    .stats-h-title { font-size:1.2rem;font-weight:800;color:var(--t1); }
+    .stats-year-sel { padding:8px 16px;border:1.5px solid var(--b2);border-radius:50px;font-size:.875rem;font-family:inherit;color:var(--t1);background:#fff;outline:none;cursor:pointer;transition:all .18s var(--ease); }
+    .stats-year-sel:focus { border-color:var(--p);box-shadow:0 0 0 3px rgba(27,115,232,.1); }
+
+    .stat-cards { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px; }
+    .stat-card { background:#fff;border-radius:var(--r3);padding:22px 22px 18px;box-shadow:var(--sh1);border:1px solid var(--b1);position:relative;overflow:hidden; }
+    .stat-card::after { content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--r3) var(--r3) 0 0; }
+    .stat-card-total::after    { background:linear-gradient(90deg,var(--p),#34A853); }
+    .stat-card-approved::after { background:var(--green); }
+    .stat-card-pending::after  { background:var(--amber); }
+    .stat-card-rejected::after { background:var(--red); }
+    .stat-card-label { font-size:.72rem;font-weight:800;color:var(--t4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px; }
+    .stat-card-num { font-size:2.4rem;font-weight:900;color:var(--t1);line-height:1; }
+    .stat-card-sub { font-size:.73rem;color:var(--t4);margin-top:6px; }
+
+    .stats-charts-row { display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px; }
+    .chart-box { background:#fff;border-radius:var(--r3);padding:22px 24px;box-shadow:var(--sh1);border:1px solid var(--b1); }
+    .chart-box-title { font-size:.88rem;font-weight:800;color:var(--t1);margin-bottom:18px;display:flex;align-items:center;gap:7px; }
+    .chart-canvas-wrap { position:relative; }
+
+    @media (max-width:900px) {
+      .stats-charts-row { grid-template-columns:1fr; }
+    }
+    @media (max-width:700px) {
+      .stat-cards { grid-template-columns:repeat(2,1fr); }
+      .stats-outer { padding:16px 14px 40px; }
+    }
+    @media (max-width:480px) {
+      .stat-cards { gap:10px; }
+      .stat-card { padding:16px 16px 14px; }
+      .stat-card-num { font-size:1.9rem; }
+    }
   </style>
 </head>
 <body>
@@ -438,6 +477,9 @@
         </button>
         <button class="nav-btn" data-tab="calendar" onclick="switchTab('calendar')">
           <span class="nav-icon">📅</span><span>캘린더</span>
+        </button>
+        <button class="nav-btn" data-tab="stats" onclick="switchTab('stats')">
+          <span class="nav-icon">📊</span><span>통계</span>
         </button>
       </nav>
       <div class="h-right">
@@ -570,6 +612,60 @@
         </div>
       </div>
     </div>
+
+    <!-- STATS -->
+    <div id="tab-stats" class="tab-pane">
+      <div class="stats-outer">
+        <div class="stats-header">
+          <div class="stats-h-title">📊 특강 통계</div>
+          <select class="stats-year-sel" id="stats-year" onchange="renderStats()">
+            <option value="">전체 기간</option>
+          </select>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card stat-card-total">
+            <div class="stat-card-label">총 제안</div>
+            <div class="stat-card-num" id="stat-total">0</div>
+            <div class="stat-card-sub">누적 제출 건수</div>
+          </div>
+          <div class="stat-card stat-card-approved">
+            <div class="stat-card-label">✅ 확정</div>
+            <div class="stat-card-num" id="stat-approved">0</div>
+            <div class="stat-card-sub">승인 완료</div>
+          </div>
+          <div class="stat-card stat-card-pending">
+            <div class="stat-card-label">⏳ 검토중</div>
+            <div class="stat-card-num" id="stat-pending">0</div>
+            <div class="stat-card-sub">승인 대기</div>
+          </div>
+          <div class="stat-card stat-card-rejected">
+            <div class="stat-card-label">❌ 반려</div>
+            <div class="stat-card-num" id="stat-rejected">0</div>
+            <div class="stat-card-sub">반려 처리</div>
+          </div>
+        </div>
+        <div class="stats-charts-row">
+          <div class="chart-box">
+            <div class="chart-box-title">👤 강사별 세미나 수</div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-instructor"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-box-title">🥧 상태별 현황</div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-status"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box" style="margin-top:16px">
+          <div class="chart-box-title">📈 월별 제출 추이 (최근 12개월)</div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-monthly"></canvas>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-stats -->
 
   </main>
 </div>
@@ -730,6 +826,7 @@ function loadData() {
     renderCards();
     syncCalendar();
     updateCounts();
+    renderStats();
     // refresh open detail modal live
     if (currentDetailId) {
       const s = seminars.find(x => x.id === currentDetailId);
@@ -764,10 +861,22 @@ function syncCalendar() {
 
   const el = document.getElementById('fc-cal');
   if (!el) return;
+  const prevMonthDate = new Date();
+  prevMonthDate.setDate(1);
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
   cal = new FullCalendar.Calendar(el, {
-    initialView: 'dayGridMonth',
+    initialView: 'multiMonth3',
+    initialDate: prevMonthDate,
     locale: 'ko',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' },
+    views: {
+      multiMonth3: {
+        type: 'multiMonth',
+        duration: { months: 3 },
+        multiMonthMaxColumns: 3,
+        buttonText: '3개월',
+      }
+    },
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'multiMonth3,dayGridMonth,dayGridWeek' },
     buttonText: { today: '오늘', month: '월간', week: '주간' },
     events,
     eventClick: info => openDetail(info.event.extendedProps.id),
@@ -1025,6 +1134,7 @@ function switchTab(name) {
   document.getElementById(`tab-${name}`).classList.add('active');
   if (name === 'calendar' && cal) setTimeout(() => cal.updateSize(), 60);
   if (name === 'submit') checkDraft();
+  if (name === 'stats') renderStats();
 }
 
 function openEdit(id) {
@@ -1209,6 +1319,138 @@ function fmtAgo(ms) {
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
+
+// ══════════════════════════════════════
+// STATS
+// ══════════════════════════════════════
+let chartInstructor = null;
+let chartStatus = null;
+let chartMonthly = null;
+
+function renderStats() {
+  // Year filter options
+  const sel = document.getElementById('stats-year');
+  if (sel) {
+    const curVal = sel.value;
+    const years = [...new Set(seminars.map(s => (s.event_date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+    sel.innerHTML = '<option value="">전체 기간</option>' + years.map(y => `<option value="${y}"${y === curVal ? ' selected' : ''}>${y}년</option>`).join('');
+  }
+
+  const yr = sel?.value || '';
+  const data = yr ? seminars.filter(s => (s.event_date || '').startsWith(yr)) : seminars;
+
+  // Summary cards
+  const el = id => document.getElementById(id);
+  if (el('stat-total'))    el('stat-total').textContent    = data.length;
+  if (el('stat-approved')) el('stat-approved').textContent = data.filter(s => s.status === 'approved').length;
+  if (el('stat-pending'))  el('stat-pending').textContent  = data.filter(s => s.status === 'pending').length;
+  if (el('stat-rejected')) el('stat-rejected').textContent = data.filter(s => s.status === 'rejected').length;
+
+  _renderInstructorChart(data);
+  _renderStatusChart(data);
+  _renderMonthlyChart(data);
+}
+
+function _renderInstructorChart(data) {
+  const ctx = document.getElementById('chart-instructor');
+  if (!ctx) return;
+  const counts = {};
+  data.forEach(s => { const k = (s.instructor || '미입력').trim(); counts[k] = (counts[k] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const labels = sorted.map(e => e[0]);
+  const values = sorted.map(e => e[1]);
+  if (chartInstructor) { chartInstructor.destroy(); chartInstructor = null; }
+  if (!labels.length) return;
+  chartInstructor = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '세미나 수',
+        data: values,
+        backgroundColor: labels.map((_, i) => COLORS[i % COLORS.length]),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#E8EAED' }, ticks: { stepSize: 1, precision: 0 }, beginAtZero: true },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function _renderStatusChart(data) {
+  const ctx = document.getElementById('chart-status');
+  if (!ctx) return;
+  const approved = data.filter(s => s.status === 'approved').length;
+  const pending  = data.filter(s => s.status === 'pending').length;
+  const rejected = data.filter(s => s.status === 'rejected').length;
+  if (chartStatus) { chartStatus.destroy(); chartStatus = null; }
+  chartStatus = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['확정', '검토중', '반려'],
+      datasets: [{
+        data: [approved, pending, rejected],
+        backgroundColor: ['#1E8E3E', '#F9AB00', '#D93025'],
+        borderWidth: 3,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 12, family: "'Noto Sans KR', sans-serif" }, padding: 14 } }
+      }
+    }
+  });
+}
+
+function _renderMonthlyChart(data) {
+  const ctx = document.getElementById('chart-monthly');
+  if (!ctx) return;
+  const now = new Date();
+  const months = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const counts = {};
+  months.forEach(m => counts[m] = 0);
+  data.forEach(s => { const m = (s.event_date || '').slice(0, 7); if (counts[m] !== undefined) counts[m]++; });
+  const labels = months.map(m => { const [y, mo] = m.split('-'); return `${y}.${mo}`; });
+  const values = months.map(m => counts[m]);
+  if (chartMonthly) { chartMonthly.destroy(); chartMonthly = null; }
+  chartMonthly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '제출 건수',
+        data: values,
+        backgroundColor: 'rgba(27,115,232,.18)',
+        borderColor: '#1B73E8',
+        borderWidth: 2,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: '#E8EAED' }, ticks: { stepSize: 1, precision: 0 }, beginAtZero: true },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
 
 // ══════════════════════════════════════
 // UTILS
