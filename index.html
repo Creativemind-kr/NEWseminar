@@ -1586,12 +1586,13 @@ function renderStats() {
   const sel = document.getElementById('stats-year');
   if (sel) {
     const curVal = sel.value;
-    const years = [...new Set(seminars.map(s => (s.event_date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+    const years = [...new Set(seminars.filter(s => s.status !== 'sample').map(s => (s.event_date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
     sel.innerHTML = '<option value="">전체 기간</option>' + years.map(y => `<option value="${y}"${y === curVal ? ' selected' : ''}>${y}년</option>`).join('');
   }
 
   const yr = sel?.value || '';
-  const data = yr ? seminars.filter(s => (s.event_date || '').startsWith(yr)) : seminars;
+  const real = seminars.filter(s => s.status !== 'sample');
+  const data = yr ? real.filter(s => (s.event_date || '').startsWith(yr)) : real;
 
   // Summary cards
   const el = id => document.getElementById(id);
