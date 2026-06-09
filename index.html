@@ -914,6 +914,9 @@ function showApp() {
   checkDraft();
   loadData();
   initDraftListeners();
+  if (role === 'teacher' && !hasValidDraft()) {
+    setTimeout(() => showChoiceModal(), 350);
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
