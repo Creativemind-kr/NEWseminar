@@ -833,14 +833,14 @@
       </div>
       <div class="h-divider"></div>
       <nav class="h-nav">
-        <button class="nav-btn active" data-tab="calendar" onclick="switchTab('calendar')">
-          <span class="nav-icon">📅</span><span>캘린더</span>
+        <button class="nav-btn active" data-tab="submit" onclick="switchTab('submit')">
+          <span class="nav-icon">✏️</span><span>제출하기</span>
         </button>
         <button class="nav-btn" data-tab="cards" onclick="switchTab('cards')">
           <span class="nav-icon">🗂</span><span>특강 목록</span>
         </button>
-        <button class="nav-btn" data-tab="submit" onclick="switchTab('submit')">
-          <span class="nav-icon">✏️</span><span>제출하기</span>
+        <button class="nav-btn" data-tab="calendar" onclick="switchTab('calendar')">
+          <span class="nav-icon">📅</span><span>캘린더</span>
         </button>
       </nav>
       <div class="h-right">
@@ -853,7 +853,7 @@
   <main class="app-main">
 
     <!-- CALENDAR -->
-    <div id="tab-calendar" class="tab-pane active">
+    <div id="tab-calendar" class="tab-pane">
       <div class="cal-wrap">
         <div id="fc-cal"></div>
       </div>
@@ -882,7 +882,7 @@
     </div>
 
     <!-- SUBMIT -->
-    <div id="tab-submit" class="tab-pane">
+    <div id="tab-submit" class="tab-pane active">
       <div class="submit-outer">
         <div class="submit-card">
           <div class="sc-header">
@@ -994,7 +994,7 @@
 // ══════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════
-const PW_MAP = { 'sbs2025': 'teacher', 'admin0000': 'admin' };
+const PW_MAP = { '0000': 'teacher', '천안11!!': 'admin' };
 
 firebase.initializeApp({
   apiKey: "AIzaSyBcrvuu9cMpCxdvsR_PqrktHWXK5e6dpFc",
